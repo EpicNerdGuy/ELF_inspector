@@ -1,37 +1,48 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 4
 
 int main(int argc,char* argv[]){
 	FILE* fp;
 	unsigned char buffer[BUFFER_SIZE];
-	size_t bytes_read;
-	
-	if(argc != 3){
-		printf("elf-inspector [HEADER] [BINARY]\n");
+	size_t byteread;
+	int count = 0;
+	char elf_magic_bytes[4] = {
+		"0x75",
+		"0x45",
+		"0x4C",
+		"0x46"
+	};
+
+	if(argc != 2){
+		printf("elf-inspector [BINARY]\n");
 		return 1;
 	}
         
-	fp = fopen(*argv[2],"rb");
+	fp = fopen(argv[1],"rb");
 	if (fp == NULL){
-		fprintf(stderr,"Error opening file %s",*argv[2]);
+		fprintf(stderr,"Error opening file %s",argv[1]);
 		return EXIT_FAILURE;
 	}
 
-	bytes_read = fread(buffer,1,BUFFER_SIZE,fp);
+	byteread = fread(buffer,1,4,fp);
 	
-	fclose(*argv[2]);
-  	
-
-
-
-
-	if(*argv[1] == "--all" || *argv[1] == "-a"){
-
+	if(byteread < 4){
+		printf("ELF file too small\n");
 	}
 
+	for(int i=0; buffer[i]!='\0'; i++){
+		if(buffer[i] != elf_magic_bytes[i]){
+			return EXIT_FAILURE;
+		}
+	}I	
 
+	printf("Given binary is an ELF\n");
+	
+
+	fclose(fp);
+  	
 
 
 	return 0;
