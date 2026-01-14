@@ -1,4 +1,5 @@
-
+#include "elf.h"
+#include "elf.c"
 #include <stdio.h>
 #include <stdlib.h>
 #define BUFFER_SIZE 4
@@ -9,10 +10,10 @@ int main(int argc,char* argv[]){
 	size_t byteread;
 	int count = 0;
 	char elf_magic_bytes[4] = {
-		"0x75",
-		"0x45",
-		"0x4C",
-		"0x46"
+		0x7F,
+		0x45,
+		0x4C,
+		0x46
 	};
 
 	if(argc != 2){
@@ -32,15 +33,16 @@ int main(int argc,char* argv[]){
 		printf("ELF file too small\n");
 	}
 
-	for(int i=0; buffer[i]!='\0'; i++){
+	for(int i=0; i < 4 ; i++){
 		if(buffer[i] != elf_magic_bytes[i]){
+			printf("Given binary is not an ELF\n");
+			fclose(fp);
 			return EXIT_FAILURE;
 		}
-	}I	
-
+	}
 	printf("Given binary is an ELF\n");
 	
-
+	elf_header_parser(fp);
 	fclose(fp);
   	
 
