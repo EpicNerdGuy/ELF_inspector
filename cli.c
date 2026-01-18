@@ -1,5 +1,4 @@
-#include "elf.h"
-#include "elf.c"
+#include "elf_parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #define BUFFER_SIZE 4
@@ -42,6 +41,9 @@ int main(int argc,char* argv[]){
 	}
 	printf("Given binary is an ELF\n");
 	
+
+	rewind(fp);
+
 	elf_header_parser(fp);
 	fclose(fp);
   	

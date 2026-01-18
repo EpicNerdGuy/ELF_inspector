@@ -1,12 +1,29 @@
-#include "elf.h"
+#include "elf_parser.h"
 #include <sys/types.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 
 void elf_header_parser(FILE* fp){
-	switch(e_dent[EI_CLASS]){
+
+	Elf64_Ehdr header;
+
+	if(fread(&header,1,sizeof(header),fp) < sizeof(header)){
+		printf("ERROR: Could not read full elf header\n");
+		return;
+	}
+
+	if (header.e_ident[EI_MAG0] != ELFMAG0 || 
+        header.e_ident[EI_MAG1] != 'E'      || 
+        header.e_ident[EI_MAG2] != 'L'      || 
+        header.e_ident[EI_MAG3] != 'F') {
+        printf("Error: This is not a valid ELF file.\n");
+        return;
+    }
+
+	switch(header.e_ident[EI_CLASS]){
 		case ELFCLASS32:
 			printf("ELF class: 32-bit objects\n");
 			break;
@@ -15,7 +32,7 @@ void elf_header_parser(FILE* fp){
 			break;
 		case ELFCLASSNONE:
 		default:
-			printf("ELF class: invalid class (0x%x)\n",e_dent(EI_CLASS));
+			printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
 			break;
 		
 	}	
