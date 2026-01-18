@@ -45,6 +45,7 @@ int main(int argc,char* argv[]){
 	rewind(fp);
 
 	elf_header_parser(fp);
+	check_endian(fp);
 	fclose(fp);
   	
 

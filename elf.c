@@ -9,6 +9,8 @@
 void elf_header_parser(FILE* fp){
 
 	Elf64_Ehdr header;
+	unsigned char e_ident[EI_NIDENT];
+	
 
 	if(fread(&header,1,sizeof(header),fp) < sizeof(header)){
 		printf("ERROR: Could not read full elf header\n");
@@ -23,6 +25,18 @@ void elf_header_parser(FILE* fp){
         return;
     }
 
+    switch(e_ident[EI_DATA]){
+    	case ELFDATA2LSB:
+    		printf("ELF is little endian\n");
+    		break;
+    	case ELFDATA2MSB:
+    		printf("ELF is big endian\n");
+    		break;
+    	default:
+    		printf("Invalid format: not ELF\n");
+    		break; 
+    }
+
 	switch(header.e_ident[EI_CLASS]){
 		case ELFCLASS32:
 			printf("ELF class: 32-bit objects\n");
@@ -35,7 +49,9 @@ void elf_header_parser(FILE* fp){
 			printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
 			break;
 		
-	}	
+	}
+
+
 }
 
 
