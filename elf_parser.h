@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 void elf_header_parser(FILE* fp);
-void check_endian(FILE* fp);
+const char* get_machine_name(uint16_t e_machine);
 
 
 #endif 

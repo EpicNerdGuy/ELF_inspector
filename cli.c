@@ -4,6 +4,7 @@
 #define BUFFER_SIZE 4
 
 int main(int argc,char* argv[]){
+	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
 	unsigned char buffer[BUFFER_SIZE];
 	size_t byteread;
@@ -45,7 +46,7 @@ int main(int argc,char* argv[]){
 	rewind(fp);
 
 	elf_header_parser(fp);
-	check_endian(fp);
+	const char* get_machine_name(uint16_t e_machine);
 	fclose(fp);
   	
 

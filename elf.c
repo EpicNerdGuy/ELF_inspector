@@ -6,6 +6,27 @@
 #include <unistd.h>
 
 
+const char* get_machine_name(uint16_t e_machine){
+
+	switch(e_machine){
+		case EM_NONE:    return "None (unknown)";
+        case EM_M32:     return "WE32100";
+        case EM_SPARC:   return "Sparc";
+        case EM_386:     return "Intel 80386";
+        case EM_68K:     return "MC68000";
+        case EM_88K:     return "MC88000";
+        case EM_860:     return "Intel 80860";
+        case EM_MIPS:    return "MIPS R3000";
+        case EM_S370:    return "IBM System/370";
+        case EM_ARM:     return "ARM";
+        case EM_X86_64:  return "Advanced Micro Devices X86-64";
+        case EM_AARCH64: return "ARM AArch64";
+        default:         return "Unknown Machine";
+	}
+}
+
+
+
 void elf_header_parser(FILE* fp){
 
 	Elf64_Ehdr header;
@@ -25,6 +46,16 @@ void elf_header_parser(FILE* fp){
         return;
     }
 
+	if(header.e_ident[EI_DATA] == ELFDATA2LSB){
+		printf("ELF is little endian\n");
+	}
+	else if(header.e_ident[EI_DATA] == ELFDATA2MSB){
+		printf("ELF is big endian\n");
+	}
+	else{
+		printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
+	}
+
 	switch(header.e_ident[EI_CLASS]){
 		case ELFCLASS32:
 			printf("ELF class: 32-bit objects\n");
@@ -39,26 +70,14 @@ void elf_header_parser(FILE* fp){
 		
 	}
 
-}
+	printf("Machine: %s\n", get_machine_name(header.e_machine));
 
-void check_endian(FILE* fp){
-	Elf64_Ehdr header;
-	rewind(fp);
-	fread(&header, 1, sizeof(header), fp);
-
-	unsigned char data_encoding = header.e_ident[EI_DATA];
-
-	if(data_encoding == ELFDATA2LSB){
-		printf("ELF is little endian\n");
-	}
-	else if(data_encoding == ELFDATA2MSB){
-		printf("ELF is big endian\n");
-	}
-	else{
-		printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
-	}
+	printf("Entry point address: 0x%lx\n", header.e_entry);
 
 
 }
+
+
+ 
 
 
