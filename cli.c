@@ -3,6 +3,24 @@
 #include <stdlib.h>
 #define BUFFER_SIZE 4
 
+void print_banner() {
+    // \x1b[1;32m: Bold Green
+    printf("\x1b[1;32m");
+    printf("  ______ _      ______   _____ _   _  _____ _____  ______ _____ _______ ____  _____  \n");
+    printf(" |  ____| |    |  ____| |_   _| \\ | |/ ____|  __ \\|  ____/ ____|__   __/ __ \\|  __ \\ \n");
+    printf(" | |__  | |    | |__      | | |  \\| | (___ | |__) | |__ | |       | | | |  | | |__) |\n");
+    printf(" |  __| | |    |  __|     | | | . ` |\\___ \\|  ___/|  __|| |       | | | |  | |  _  / \n");
+    printf(" | |____| |____| |       _| |_| |\\  |____) | |    | |___| |____   | | | |__| | | \\ \\ \n");
+    printf(" |______|______|_|      |_____|_| \\_|_____/|_|    |______\\_____|  |_|  \\____/|_|  \\_\\\n");
+    
+    // Subheading
+    printf("\n");
+    printf("          >> Advanced Binary Analysis & ELF Structure Inspector <<\n");
+    printf("                      v1.0 | Reverse Engineering Tool\n");
+    printf("=====================================================================================\n");
+    printf("\x1b[0m\n"); // Reset color
+}
+
 int main(int argc,char* argv[]){
 	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
@@ -15,6 +33,8 @@ int main(int argc,char* argv[]){
 		0x4C,
 		0x46
 	};
+
+	print_banner();
 
 	if(argc != 2){
 		printf("elf-inspector [BINARY]\n");
@@ -32,16 +52,6 @@ int main(int argc,char* argv[]){
 	if(byteread < 4){
 		printf("ELF file too small\n");
 	}
-
-	for(int i=0; i < 4 ; i++){
-		if(buffer[i] != elf_magic_bytes[i]){
-			printf("Given binary is not an ELF\n");
-			fclose(fp);
-			return EXIT_FAILURE;
-		}
-	}
-	printf("Given binary is an ELF\n");
-	
 
 	rewind(fp);
 

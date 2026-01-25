@@ -32,7 +32,8 @@ void elf_header_parser(FILE* fp){
 	Elf64_Ehdr header;
 	unsigned char e_ident[EI_NIDENT];
 	
-
+	printf("ELF Header info:\n");
+	printf("----------------\n");
 	if(fread(&header,1,sizeof(header),fp) < sizeof(header)){
 		printf("ERROR: Could not read full elf header\n");
 		return;
@@ -47,32 +48,49 @@ void elf_header_parser(FILE* fp){
     }
 
 	if(header.e_ident[EI_DATA] == ELFDATA2LSB){
-		printf("ELF is little endian\n");
+		printf("Data: little endian\n");
 	}
 	else if(header.e_ident[EI_DATA] == ELFDATA2MSB){
-		printf("ELF is big endian\n");
+		printf("Data: big endian\n");
 	}
 	else{
-		printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
+		printf("class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
 	}
 
 	switch(header.e_ident[EI_CLASS]){
 		case ELFCLASS32:
-			printf("ELF class: 32-bit objects\n");
+			printf("class: 32-bit objects\n");
 			break;
 		case ELFCLASS64:
-			printf("ELF class: 64-bit objects\n");
+			printf("class: 64-bit objects\n");
 			break;
 		case ELFCLASSNONE:
 		default:
-			printf("ELF class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
+			printf("class: invalid class (0x%x)\n",header.e_ident[EI_CLASS]);
 			break;
 		
+	}
+
+	printf("OS/ABI: ");
+	switch(e_ident[EI_OSABI]){
+	case   ELFOSABI_NONE:
+		printf("UNIX -> System V\n"); break;
+	case ELFOSABI_LINUX:
+		printf("UNIX -> Linux\n"); break;
+	case ELFOSABI_FREEBSD:
+		printf("UNIX -> FreeBSD\n"); break;
+	case ELFOSABI_ARM:
+		printf("UNIX -> ARM Architecture\n"); break;
+	default:
+		printf("UNKNOWN UNIX\n"); break;
 	}
 
 	printf("Machine: %s\n", get_machine_name(header.e_machine));
 
 	printf("Entry point address: 0x%lx\n", header.e_entry);
+	printf("Start of program headers: %lu\n",header.e_phoff);
+	printf("Start of section headers: %lu\n",header.e_shoff);
+
 
 
 }
