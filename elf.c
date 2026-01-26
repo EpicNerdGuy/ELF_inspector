@@ -91,8 +91,11 @@ void elf_header_parser(FILE* fp){
 	printf("Start of program headers: %lu\n",header.e_phoff);
 	printf("Start of section headers: %lu\n",header.e_shoff);
 
+}
 
-
+void program_header(FILE* fp){
+	printf("\nProgram Header info:\n");
+	printf("----------------\n");
 }
 
 

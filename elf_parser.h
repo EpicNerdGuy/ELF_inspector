@@ -6,6 +6,6 @@
 
 void elf_header_parser(FILE* fp);
 const char* get_machine_name(uint16_t e_machine);
-
+void program_header(FILE* fp);
 
 #endif 

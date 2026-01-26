@@ -57,6 +57,7 @@ int main(int argc,char* argv[]){
 
 	elf_header_parser(fp);
 	const char* get_machine_name(uint16_t e_machine);
+	program_header(fp);
 	fclose(fp);
   	
 
