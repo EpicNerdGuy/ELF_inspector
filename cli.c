@@ -22,6 +22,7 @@ void print_banner() {
 }
 
 int main(int argc,char* argv[]){
+	Elf64_Ehdr header;
 	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
 	unsigned char buffer[BUFFER_SIZE];
@@ -57,7 +58,7 @@ int main(int argc,char* argv[]){
 
 	elf_header_parser(fp);
 	const char* get_machine_name(uint16_t e_machine);
-	program_header(fp);
+	program_header(fp,header);
 	fclose(fp);
   	
 

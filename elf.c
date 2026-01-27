@@ -93,9 +93,39 @@ void elf_header_parser(FILE* fp){
 
 }
 
-void program_header(FILE* fp){
+void program_header(FILE* fp,Elf64_Ehdr header){
+	Elf64_Phdr phdr;
 	printf("\nProgram Header info:\n");
 	printf("----------------\n");
+	printf("%-15s %-18s %-18s %-10s %-5s\n", "Type", "Offset", "VirtAddr", "FileSiz", "Flags");
+
+	fseek(fp,header.e_phoff,SEEK_SET);
+
+	for(int i = 0; i < header.e_phnum; i++){
+		if (fread(&phdr, sizeof(Elf64_Phdr), 1, fp) != 1) break;
+
+		const char* type_str;
+        switch (phdr.p_type) {
+            case PT_NULL:    type_str = "NULL";    break;
+            case PT_LOAD:    type_str = "LOAD";    break;
+            case PT_DYNAMIC: type_str = "DYNAMIC"; break;
+            case PT_INTERP:  type_str = "INTERP";  break;
+            case PT_NOTE:    type_str = "NOTE";    break;
+            case PT_PHDR:    type_str = "PHDR";    break;
+            case PT_GNU_STACK: type_str = "GNU_STACK"; break;
+            default:         type_str = "OTHER";   break;
+        }
+
+        char flags[4] = "---";
+        if (phdr.p_flags & PF_R) flags[0] = 'R';
+        if (phdr.p_flags & PF_W) flags[1] = 'W';
+        if (phdr.p_flags & PF_X) flags[2] = 'X';
+
+        printf("%-15s 0x%016lx 0x%016lx 0x%08lx %-5s\n", 
+                type_str, phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, flags);
+	}
+
+
 }
 
 
