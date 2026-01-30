@@ -56,9 +56,9 @@ int main(int argc,char* argv[]){
 
 	rewind(fp);
 
-	elf_header_parser(fp);
+	Elf64_Ehdr my_header = elf_header_parser(fp);
 	const char* get_machine_name(uint16_t e_machine);
-	program_header(fp,header);
+	program_header(fp,my_header);
 	fclose(fp);
   	
 

@@ -1,6 +1,7 @@
 #include "elf_parser.h"
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -27,24 +28,25 @@ const char* get_machine_name(uint16_t e_machine){
 
 
 
-void elf_header_parser(FILE* fp){
+Elf64_Ehdr elf_header_parser(FILE* fp){
 
 	Elf64_Ehdr header;
+	rewind(fp);
 	unsigned char e_ident[EI_NIDENT];
 	
 	printf("ELF Header info:\n");
 	printf("----------------\n");
 	if(fread(&header,1,sizeof(header),fp) < sizeof(header)){
-		printf("ERROR: Could not read full elf header\n");
-		return;
+		fprintf(stderr,"ERROR: Could not read full elf header\n");
+		exit(EXIT_FAILURE);
 	}
 
 	if (header.e_ident[EI_MAG0] != ELFMAG0 || 
         header.e_ident[EI_MAG1] != 'E'      || 
         header.e_ident[EI_MAG2] != 'L'      || 
         header.e_ident[EI_MAG3] != 'F') {
-        printf("Error: This is not a valid ELF file.\n");
-        return;
+        fprintf(stderr,"Error: This is not a valid ELF file.\n");
+        exit(EXIT_FAILURE);
     }
 
 	if(header.e_ident[EI_DATA] == ELFDATA2LSB){
@@ -72,7 +74,7 @@ void elf_header_parser(FILE* fp){
 	}
 
 	printf("OS/ABI: ");
-	switch(e_ident[EI_OSABI]){
+	switch(header.e_ident[EI_OSABI]){
 	case   ELFOSABI_NONE:
 		printf("UNIX -> System V\n"); break;
 	case ELFOSABI_LINUX:
@@ -90,14 +92,19 @@ void elf_header_parser(FILE* fp){
 	printf("Entry point address: 0x%lx\n", header.e_entry);
 	printf("Start of program headers: %lu\n",header.e_phoff);
 	printf("Start of section headers: %lu\n",header.e_shoff);
+	return header;
 
 }
 
 void program_header(FILE* fp,Elf64_Ehdr header){
 	Elf64_Phdr phdr;
+	if(header.e_phnum == 0){
+		printf("No program headers found\n");
+		return;
+	}
 	printf("\nProgram Header info:\n");
 	printf("----------------\n");
-	printf("%-15s %-18s %-18s %-10s %-5s\n", "Type", "Offset", "VirtAddr", "FileSiz", "Flags");
+	printf("%-15s %-18s %-18s %-10s %-5s\n", "Type", "Offset", "VirtAddr", "FileSize", "Flags");
 
 	fseek(fp,header.e_phoff,SEEK_SET);
 
@@ -121,8 +128,7 @@ void program_header(FILE* fp,Elf64_Ehdr header){
         if (phdr.p_flags & PF_W) flags[1] = 'W';
         if (phdr.p_flags & PF_X) flags[2] = 'X';
 
-        printf("%-15s 0x%016lx 0x%016lx 0x%08lx %-5s\n", 
-                type_str, phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, flags);
+        printf("%-15s 0x%016lx 0x%016lx 0x%08lx %-5s\n",type_str, phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, flags);
 	}
 
 
