@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #define BUFFER_SIZE 4
-const char* prog_name = "ELF INSPECTOR";
 
 void print_banner() {
     // \x1b[1;32m: Bold Green
@@ -28,21 +27,34 @@ void print_usage(char* exec_name){
 	printf("\n\033[1;33mUsage:\033[0m %s [OPTIONS] -f <file>\n\n",exec_name);
     printf("\033[1;32mOptions:\033[0m\n");
     printf("  -f, --file <file>    Path to the ELF binary to inspect (Required)\n");
+    printf("  -h, --headers        Display ALL headers (ELF + Program)\n");
     printf("  -e, --eh             Parse and display the ELF Header\n");
     printf("  -p, --ph             Parse and display the Program Header Table\n");
-    printf("  -h, --help           Display this help menu\n\n");
+    printf("  --help               Display this help menu\n\n");
     printf("\033[1;34mExample:\033[0m\n");
-    printf("  %s -f /bin/ls -eh\n\n", prog_name);
+    printf("  %s -f /bin/ls -eh\n\n", exec_name);
 }
 
 int main(int argc,char* argv[]){
+
+	print_banner();
+
 	int opt;
+	char* filename = NULL;
+	int do_elf_header = 0;
+	int do_prog_header = 0;
+	int show_help = 0;
+
 	static struct option long_options[] = {
-		{"file",required_argument,0,'f'},
-		{"eh",no_argument,0,'e'},
-		{"ph",no_argument,0,'p'},
-		{0,0,0,0}
-	};
+        {"file",    required_argument, 0, 'f'},
+        {"headers", no_argument,       0, 'h'},
+        {"eh",      no_argument,       0, 'e'},
+        {"ph",      no_argument,       0, 'p'},
+        {"help",    no_argument,       0, '?'},
+        {0, 0, 0, 0}
+    };
+
+
 	Elf64_Ehdr header;
 	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
@@ -56,7 +68,6 @@ int main(int argc,char* argv[]){
 		0x46
 	};
 
-	print_banner();
 /*
 	if(argc != 2){
 		printf("elf-inspector [BINARY]\n");
@@ -68,44 +79,48 @@ int main(int argc,char* argv[]){
 	Elf64_Ehdr my_header;
 	while((opt = getopt_long(argc, argv, "f:eph", long_options, &option_index)) != -1){
 		switch(opt){
-			case 'h':
-				print_usage(argv[1]);
-				break;
 			case 'f':
-				fp = fopen(optarg,"rb");
-				if (fp == NULL){
-					fprintf(stderr,"Error opening file %s",argv[1]);
-					exit(EXIT_FAILURE);
-				}
+				filename = optarg;
+				break;
+			case 'h':
+				do_elf_header = 1;
+				do_prog_header =1;
 				break;
 			case 'e':
-				if (!fp){
-					fprintf(stderr, "Error: Specify file first with -f\n"); 
-					break; 
-				}
-				my_header = elf_header_parser(fp);
-				header_parsed = 1;
-				const char* get_machine_name(uint16_t e_machine);
+				do_elf_header = 1;
 				break;
 			case 'p':
-				if (!header_parsed) { 
-                	fprintf(stderr, "Error: Parse header (-e) before program headers (-p)\n"); 
-                	break; 
-            	}
-				program_header(fp,my_header);
+				do_prog_header = 1;
 				break;
 			default:
-				print_usage(argv[1]);
-				return 1;
+				show_help = 1;
+				break;
 		}
 	}
-        
-	byteread = fread(buffer,1,4,fp);
-	
-	if(byteread < 4){
-		printf("ELF file too small\n");
+
+	if (show_help || filename == NULL){
+		print_usage(argv[0]);
+		return (filename == NULL && !show_help) ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
 
-	fclose(fp);
+	fp = fopen(filename,"rb");
+	if(!fp){
+		perror("Error opening file\n");
+		return EXIT_FAILURE;
+	}
+
+	if(do_elf_header || do_prog_header){
+		my_header = elf_header_parser(fp);
+		if(do_elf_header){
+			printf("ELF Header info:\n");
+			printf("---------------------\n");
+			display_elf_header(fp,my_header);
+		}
+		
+		if(do_prog_header){
+			program_header(fp,my_header);
+		}
+	}
+
 	return 0;
 }

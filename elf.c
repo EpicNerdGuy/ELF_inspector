@@ -26,29 +26,7 @@ const char* get_machine_name(uint16_t e_machine){
 	}
 }
 
-
-
-Elf64_Ehdr elf_header_parser(FILE* fp){
-
-	Elf64_Ehdr header;
-	rewind(fp);
-	unsigned char e_ident[EI_NIDENT];
-	
-	printf("ELF Header info:\n");
-	printf("----------------\n");
-	if(fread(&header,1,sizeof(header),fp) < sizeof(header)){
-		fprintf(stderr,"ERROR: Could not read full elf header\n");
-		exit(EXIT_FAILURE);
-	}
-
-	if (header.e_ident[EI_MAG0] != ELFMAG0 || 
-        header.e_ident[EI_MAG1] != 'E'      || 
-        header.e_ident[EI_MAG2] != 'L'      || 
-        header.e_ident[EI_MAG3] != 'F') {
-        fprintf(stderr,"Error: This is not a valid ELF file.\n");
-        exit(EXIT_FAILURE);
-    }
-
+void display_elf_header(FILE* fp,Elf64_Ehdr header){
 	if(header.e_ident[EI_DATA] == ELFDATA2LSB){
 		printf("Data: little endian\n");
 	}
@@ -92,8 +70,23 @@ Elf64_Ehdr elf_header_parser(FILE* fp){
 	printf("Entry point address: 0x%lx\n", header.e_entry);
 	printf("Start of program headers: %lu\n",header.e_phoff);
 	printf("Start of section headers: %lu\n",header.e_shoff);
-	return header;
+}
 
+
+Elf64_Ehdr elf_header_parser(FILE* fp) {
+    Elf64_Ehdr header;
+    rewind(fp);
+
+    if (fread(&header, 1, sizeof(header), fp) < sizeof(header)) {
+        fprintf(stderr, "ERROR: Could not read full ELF header\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (header.e_ident[EI_MAG0] != ELFMAG0 || header.e_ident[EI_MAG1] != 'E') {
+        fprintf(stderr, "Error: Not a valid ELF file.\n");
+        exit(EXIT_FAILURE);
+    }
+    return header; 
 }
 
 void program_header(FILE* fp,Elf64_Ehdr header){
