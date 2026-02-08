@@ -1,15 +1,18 @@
+# ELF Inspector
+
 ### Overview
 
-ELF Inspector is a low-level binary analysis tool designed to parse and display the internal structure of Executable and Linkable Format (ELF) files. It provides detailed insights into file headers, machine architecture, and entry point addresses and program headers serving as a utility for reverse engineering and software security auditing.
+ELF Inspector is a low-level binary analysis tool designed to parse and display the internal structure of Executable and Linkable Format (ELF) files. It provides detailed insights into file headers, machine architecture, and entry point addresses and program headers, serving as a utility for reverse engineering and software security auditing.
 
 ---
 
 ### Features
 
-* **Header Parsing**: Extracts core metadata from the ELF header, including class (32-bit vs 64-bit), data encoding (endianness), and OS/ABI information and program headers.
+* **Header Parsing**: Extracts core metadata from the ELF header, including class (32-bit vs 64-bit), data encoding (endianness), OS/ABI information, and program headers.
 * **Architecture Identification**: Detects the target instruction set architecture, such as x86-64.
 * **Address Analysis**: Locates and displays the virtual address of the program entry point.
 * **Safety Checks**: Includes validation logic to ensure the target file contains the standard ELF magic bytes before attempting to parse.
+* **Modular Inspection**: Use command-line flags to isolate and view only the specific headers you care about.
 
 ---
 
@@ -20,7 +23,7 @@ The tool is written in C and interacts directly with the ELF file structure. It 
 * ELF64 header structures.
 * Little-endian and Big-endian data formats.
 * Detection of Executable, Shared Object, and Relocatable file types.
-* Program headers
+* Program header table parsing (Offsets, Virtual Addresses, File Sizes, and Flags).
 
 ---
 
@@ -37,14 +40,49 @@ gcc cli.c -o elf_inspector
 
 ### Usage
 
-Run the binary by providing the path to an ELF file as a command line argument:
+Run the binary by providing the path to an ELF file using the `-f` flag, followed by the specific headers you want to inspect.
 
 ```bash
-./elf_inspector <path_to_binary>
+./elf_inspector [OPTIONS] -f <file>
 
 ```
 
-**Example output:**
+#### Options:
+
+| Short Flag | Long Flag | Description |
+| --- | --- | --- |
+| `-f` | `--file <file>` | Path to the ELF binary to inspect **(Required)** |
+| `-a` | `--all` | Display **ALL** headers (ELF + Program) |
+| `-e` | `--eh` | Parse and display only the **ELF Header** |
+| `-p` | `--ph` | Parse and display only the **Program Header Table** |
+| `-h` | `--help` | Display the help menu |
+
+#### Examples:
+
+**View only the ELF Header:**
+
+```bash
+./elf_inspector -f /bin/ls -e
+
+```
+
+**View only the Program Headers:**
+
+```bash
+./elf_inspector -f /bin/ls -p
+
+```
+
+**View everything (ELF + Program headers):**
+
+```bash
+./elf_inspector -f /bin/ls -a
+
+```
+
+---
+
+### Example Output
 
 ```text
   ______ _      ______   _____ _   _  _____ _____  ______ _____ _______ ____  _____  
@@ -79,10 +117,5 @@ LOAD            0x0000000000002000 0x0000000000002000 0x000009d0 R--
 LOAD            0x0000000000002dd0 0x0000000000003dd0 0x00000298 RW-  
 DYNAMIC         0x0000000000002de0 0x0000000000003de0 0x000001e0 RW-  
 NOTE            0x0000000000000388 0x0000000000000388 0x00000020 R--  
-NOTE            0x00000000000003a8 0x00000000000003a8 0x00000024 R--  
-NOTE            0x00000000000029b0 0x00000000000029b0 0x00000020 R--  
-OTHER           0x0000000000000388 0x0000000000000388 0x00000020 R--  
-OTHER           0x0000000000002774 0x0000000000002774 0x0000004c R--  
-OTHER           0x00000000000028f8 0x00000000000028f8 0x000000b5 R--  
-GNU_STACK       0x0000000000000000 0x0000000000000000 0x00000000 RW-  
-OTHER           0x0000000000002dd0 0x0000000000003dd0 0x00000230 R--  
+
+```
