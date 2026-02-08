@@ -27,10 +27,10 @@ void print_usage(char* exec_name){
 	printf("\n\033[1;33mUsage:\033[0m %s [OPTIONS] -f <file>\n\n",exec_name);
     printf("\033[1;32mOptions:\033[0m\n");
     printf("  -f, --file <file>    Path to the ELF binary to inspect (Required)\n");
-    printf("  -h, --headers        Display ALL headers (ELF + Program)\n");
+    printf("  -a, --all            Display ALL headers (ELF + Program)\n");
     printf("  -e, --eh             Parse and display the ELF Header\n");
     printf("  -p, --ph             Parse and display the Program Header Table\n");
-    printf("  --help               Display this help menu\n\n");
+    printf("  -h, --help           Display this help menu\n\n");
     printf("\033[1;34mExample:\033[0m\n");
     printf("  %s -f /bin/ls -eh\n\n", exec_name);
 }
@@ -51,11 +51,10 @@ int main(int argc,char* argv[]){
         {"eh",      no_argument,       0, 'e'},
         {"ph",      no_argument,       0, 'p'},
         {"help",    no_argument,       0, '?'},
+        {"all",		no_argument,	   0,  'a'},
         {0, 0, 0, 0}
     };
 
-
-	Elf64_Ehdr header;
 	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
 	unsigned char buffer[BUFFER_SIZE];
@@ -68,21 +67,14 @@ int main(int argc,char* argv[]){
 		0x46
 	};
 
-/*
-	if(argc != 2){
-		printf("elf-inspector [BINARY]\n");
-		return 1;
-	}
-*/
 	int header_parsed = 0;
 	int option_index = 0;
-	Elf64_Ehdr my_header;
-	while((opt = getopt_long(argc, argv, "f:eph", long_options, &option_index)) != -1){
+	while((opt = getopt_long(argc, argv, "f:epah", long_options, &option_index)) != -1){
 		switch(opt){
 			case 'f':
 				filename = optarg;
 				break;
-			case 'h':
+			case 'a':
 				do_elf_header = 1;
 				do_prog_header =1;
 				break;
@@ -109,18 +101,16 @@ int main(int argc,char* argv[]){
 		return EXIT_FAILURE;
 	}
 
-	if(do_elf_header || do_prog_header){
-		my_header = elf_header_parser(fp);
-		if(do_elf_header){
-			printf("ELF Header info:\n");
-			printf("---------------------\n");
-			display_elf_header(fp,my_header);
-		}
-		
-		if(do_prog_header){
-			program_header(fp,my_header);
-		}
+	Elf64_Ehdr my_header = elf_header_parser(fp);
+
+	if(do_elf_header){
+		display_elf_header(fp,my_header);
 	}
 
+	if(do_prog_header){
+		program_header(fp,my_header);
+	}
+
+	fclose(fp);
 	return 0;
 }
