@@ -95,9 +95,13 @@ void program_header(FILE* fp,Elf64_Ehdr header){
 		printf("No program headers found\n");
 		return;
 	}
-	printf("\nProgram Header info:\n");
+	printf("\x1b[1;32m");
+	printf("\n[+] Program Header:\n");
 	printf("----------------\n");
+	printf("\x1b[0m\n");
+	printf("\x1b[1;32m");
 	printf("%-15s %-18s %-18s %-10s %-5s\n", "Type", "Offset", "VirtAddr", "FileSize", "Flags");
+	printf("\x1b[0m");
 
 	fseek(fp,header.e_phoff,SEEK_SET);
 

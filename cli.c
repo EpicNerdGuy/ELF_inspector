@@ -104,6 +104,11 @@ int main(int argc,char* argv[]){
 	Elf64_Ehdr my_header = elf_header_parser(fp);
 
 	if(do_elf_header){
+		printf("\x1b[1;32m");
+		printf("[+] ELF Header:\n");
+		printf("----------------\n");
+		printf("\x1b[0m\n");
+
 		display_elf_header(fp,my_header);
 	}
 
