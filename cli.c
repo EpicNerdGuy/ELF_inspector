@@ -116,6 +116,8 @@ int main(int argc,char* argv[]){
 		program_header(fp,my_header);
 	}
 
+	display_security_overview(fp,my_header);
+
 	fclose(fp);
 	return 0;
 }

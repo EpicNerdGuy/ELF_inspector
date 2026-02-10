@@ -89,6 +89,22 @@ Elf64_Ehdr elf_header_parser(FILE* fp) {
     return header; 
 }
 
+const char* check_pie(Elf64_Ehdr *header){
+	return (header -> e_type == ET_DYN) ? "ENABLED" : "DISABLED";
+}
+
+void display_security_overview(FILE* fp,Elf64_Ehdr header){
+	printf("\x1b[1;32m");
+	printf("\n[+] Security Overview:\n");
+	printf("----------------\n");
+	printf("\x1b[0m\n");
+	printf("\x1b[1;32m");
+	printf("\x1b[0m");
+	const char* PIE;
+	PIE = check_pie(&header);
+	printf("PIE:	%s\n",PIE);
+}
+
 void program_header(FILE* fp,Elf64_Ehdr header){
 	Elf64_Phdr phdr;
 	if(header.e_phnum == 0){
