@@ -38,9 +38,6 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header){
 	}
 
 	switch(header.e_ident[EI_CLASS]){
-		case ELFCLASS32:
-			printf("class: 32-bit objects\n");
-			break;
 		case ELFCLASS64:
 			printf("class: 64-bit objects\n");
 			break;
@@ -53,7 +50,7 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header){
 
 	printf("OS/ABI: ");
 	switch(header.e_ident[EI_OSABI]){
-	case   ELFOSABI_NONE:
+	case ELFOSABI_NONE:
 		printf("UNIX -> System V\n"); break;
 	case ELFOSABI_LINUX:
 		printf("UNIX -> Linux\n"); break;
@@ -66,7 +63,6 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header){
 	}
 
 	printf("Machine: %s\n", get_machine_name(header.e_machine));
-
 	printf("Entry point address: 0x%lx\n", header.e_entry);
 	printf("Start of program headers: %lu\n",header.e_phoff);
 	printf("Start of section headers: %lu\n",header.e_shoff);
@@ -126,13 +122,18 @@ void program_header(FILE* fp,Elf64_Ehdr header){
 
 		const char* type_str;
         switch (phdr.p_type) {
-            case PT_NULL:    type_str = "NULL";    break;
-            case PT_LOAD:    type_str = "LOAD";    break;
-            case PT_DYNAMIC: type_str = "DYNAMIC"; break;
-            case PT_INTERP:  type_str = "INTERP";  break;
-            case PT_NOTE:    type_str = "NOTE";    break;
-            case PT_PHDR:    type_str = "PHDR";    break;
-            case PT_GNU_STACK: type_str = "GNU_STACK"; break;
+            case PT_NULL:    	type_str = "NULL";    break;
+            case PT_LOAD:    	type_str = "LOAD";    break;
+            case PT_DYNAMIC: 	type_str = "DYNAMIC"; break;
+            case PT_INTERP:  	type_str = "INTERP";  break;
+            case PT_NOTE:    	type_str = "NOTE";    break;
+            case PT_PHDR:    	type_str = "PHDR";    break;
+            case PT_GNU_STACK:  type_str = "GNU_STACK"; break;
+            case PT_SHLIB:		type_str = "SHLIB"; break;
+            case PT_TLS:		type_str = "TLS"; break;
+            case PT_GNU_RELRO:	type_str = "GNU_RELRO"; break;
+            case PT_GNU_EH_FRAME: type_str = "GNU_EH_FRAME"; break;
+            case PT_GNU_PROPERTY: type_str = "GNU_PROPERTY"; break;
             default:         type_str = "OTHER";   break;
         }
 

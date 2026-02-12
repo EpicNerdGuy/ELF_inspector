@@ -55,20 +55,9 @@ int main(int argc,char* argv[]){
         {0, 0, 0, 0}
     };
 
-	unsigned char e_ident[EI_NIDENT];
 	FILE* fp;
-	unsigned char buffer[BUFFER_SIZE];
-	size_t byteread;
-	int count = 0;
-	char elf_magic_bytes[4] = {
-		0x7F,
-		0x45,
-		0x4C,
-		0x46
-	};
-
-	int header_parsed = 0;
 	int option_index = 0;
+
 	while((opt = getopt_long(argc, argv, "f:epah", long_options, &option_index)) != -1){
 		switch(opt){
 			case 'f':
@@ -117,7 +106,6 @@ int main(int argc,char* argv[]){
 	}
 
 	display_security_overview(fp,my_header);
-
 	fclose(fp);
 	return 0;
 }
