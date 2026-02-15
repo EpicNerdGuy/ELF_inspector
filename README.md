@@ -76,7 +76,7 @@ Run the binary by providing the path to an ELF file using the `-f` flag, followe
 **View everything (ELF + Program headers):**
 
 ```bash
-./elf_inspector -f /bin/ls -a
+./elf_inspector -f /bin/ls --all
 
 ```
 
@@ -96,26 +96,40 @@ Run the binary by providing the path to an ELF file using the `-f` flag, followe
                       v1.0 | Reverse Engineering Tool
 =====================================================================================
 
-ELF Header info:
+[+] ELF Header:
 ----------------
+
 Data: little endian
 class: 64-bit objects
 OS/ABI: UNIX -> System V
 Machine: Advanced Micro Devices X86-64
-Entry point address: 0x10f0
+Entry point address: 0x6760
 Start of program headers: 64
-Start of section headers: 14696
+Start of section headers: 156712
 
-Program Header info:
+[+] Program Header:
 ----------------
+
 Type            Offset             VirtAddr           FileSize   Flags
-PHDR            0x0000000000000040 0x0000000000000040 0x00000348 R--  
-INTERP          0x00000000000003cc 0x00000000000003cc 0x0000001c R--  
-LOAD            0x0000000000000000 0x0000000000000000 0x000008c8 R--  
-LOAD            0x0000000000001000 0x0000000000001000 0x000009b9 R-X  
-LOAD            0x0000000000002000 0x0000000000002000 0x000009d0 R--  
-LOAD            0x0000000000002dd0 0x0000000000003dd0 0x00000298 RW-  
-DYNAMIC         0x0000000000002de0 0x0000000000003de0 0x000001e0 RW-  
-NOTE            0x0000000000000388 0x0000000000000388 0x00000020 R--  
+PHDR            0x0000000000000040 0x0000000000000040 0x00000310 R--  
+INTERP          0x0000000000000394 0x0000000000000394 0x0000001c R--  
+LOAD            0x0000000000000000 0x0000000000000000 0x00003810 R--  
+LOAD            0x0000000000004000 0x0000000000004000 0x00016cf9 R-X  
+LOAD            0x000000000001b000 0x000000000001b000 0x00009538 R--  
+LOAD            0x0000000000024fb0 0x0000000000025fb0 0x000012d0 RW-  
+DYNAMIC         0x00000000000259f8 0x00000000000269f8 0x00000210 RW-  
+NOTE            0x0000000000000350 0x0000000000000350 0x00000020 R--  
+NOTE            0x0000000000000370 0x0000000000000370 0x00000024 R--  
+NOTE            0x0000000000024518 0x0000000000024518 0x00000020 R--  
+GNU_PROPERTY    0x0000000000000350 0x0000000000000350 0x00000020 R--  
+GNU_EH_FRAME    0x0000000000020388 0x0000000000020388 0x00000a74 R--  
+GNU_STACK       0x0000000000000000 0x0000000000000000 0x00000000 RW-  
+GNU_RELRO       0x0000000000024fb0 0x0000000000025fb0 0x00001050 R--  
+
+[+] Security Overview:
+----------------
+
+PIE:	ENABLED
+
 
 ```
