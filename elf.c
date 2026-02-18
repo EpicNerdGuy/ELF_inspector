@@ -1,5 +1,6 @@
 #include "elf_parser.h"
 #include <sys/types.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -68,6 +69,26 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header){
 	printf("Start of section headers: %lu\n",header.e_shoff);
 }
 
+void check_stack_canary(Elf64_Shdr *sec_header,Elf64_Ehdr *header,char* mmap_base){
+	if(sec_header->sh_type == SHT_DYNSYM){
+		//bElf64_Shdr *shdr_table = (Elf64_Shdr *)(mmap_base + header->e_shoff);
+		//Elf64_Shdr *strtab_shdr = &shdr_table[sec_header->sh_link];
+
+		char *strtab_ptr = (char *)(mmap_base + sec_header->sh_offset);
+		Elf64_Sym *sym = (Elf64_Sym *)(mmap_base + sec_header->sh_offset);
+		int num_symbols = sec_header->sh_size / sec_header->sh_entsize;
+
+		for(int i = 0; i < num_symbols; i++){
+			char* symbol_name = strtab_ptr + sym[i].st_name;
+
+			if(strcmp(symbol_name,"__stack_chk_fail") == 0){
+				printf("Stack Canary: Found\n");
+				return;
+			}
+		}
+		printf("Stack Canary: Not Found\n");
+	}
+}
 
 Elf64_Ehdr elf_header_parser(FILE* fp) {
     Elf64_Ehdr header;
@@ -89,7 +110,7 @@ const char* check_pie(Elf64_Ehdr *header){
 	return (header -> e_type == ET_DYN) ? "ENABLED" : "DISABLED";
 }
 
-void display_security_overview(FILE* fp,Elf64_Ehdr header){
+void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header,char* mmap_base){
 	printf("\x1b[1;32m");
 	printf("\n[+] Security Overview:\n");
 	printf("----------------\n");
@@ -99,6 +120,7 @@ void display_security_overview(FILE* fp,Elf64_Ehdr header){
 	const char* PIE;
 	PIE = check_pie(&header);
 	printf("PIE:	%s\n",PIE);
+	check_stack_canary(sec_header,&header,mmap_base);
 }
 
 void program_header(FILE* fp,Elf64_Ehdr header){

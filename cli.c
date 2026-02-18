@@ -1,7 +1,10 @@
 #include "elf_parser.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <getopt.h>
 #define BUFFER_SIZE 4
 
@@ -44,6 +47,9 @@ int main(int argc,char* argv[]){
 	int do_elf_header = 0;
 	int do_prog_header = 0;
 	int show_help = 0;
+	struct stat st;
+
+	
 
 	static struct option long_options[] = {
         {"file",    required_argument, 0, 'f'},
@@ -56,7 +62,18 @@ int main(int argc,char* argv[]){
     };
 
 	FILE* fp;
+	int fd;
+	fd = open(argv[2],O_RDONLY);
+	if(fd < 0){
+		perror("ERROR: opening file\n");
+	}
 	int option_index = 0;
+
+	if (fstat(fd, &st) < 0) {
+        perror("Error getting file size");
+        close(fd);
+        return 1;
+    }
 
 	while((opt = getopt_long(argc, argv, "f:epah", long_options, &option_index)) != -1){
 		switch(opt){
@@ -90,8 +107,17 @@ int main(int argc,char* argv[]){
 		return EXIT_FAILURE;
 	}
 
+	char *mmap_base = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if(mmap_base == MAP_FAILED){
+		perror("Mapping failed\n");
+		close(fd);
+		return 1;
+	}
 	Elf64_Ehdr my_header = elf_header_parser(fp);
+	Elf64_Shdr *sec_header;
 
+	sec_header = (Elf64_Shdr *)(mmap_base + my_header.e_shoff);
+    
 	if(do_elf_header){
 		printf("\x1b[1;32m");
 		printf("[+] ELF Header:\n");
@@ -105,7 +131,8 @@ int main(int argc,char* argv[]){
 		program_header(fp,my_header);
 	}
 
-	display_security_overview(fp,my_header);
+	munmap(mmap_base, st.st_size);
+	display_security_overview(fp,my_header,sec_header,mmap_base);
 	fclose(fp);
 	return 0;
 }
