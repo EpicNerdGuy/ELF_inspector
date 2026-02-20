@@ -1,4 +1,5 @@
 #include "elf_parser.h"
+#include <elf.h>
 #include <sys/types.h>
 #include <string.h>
 #include <stdio.h>
@@ -63,11 +64,32 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header){
 		printf("UNKNOWN UNIX\n"); break;
 	}
 
-	printf("Machine: %s\n", get_machine_name(header.e_machine));
-	printf("Entry point address: 0x%lx\n", header.e_entry);
-	printf("Start of program headers: %lu\n",header.e_phoff);
-	printf("Start of section headers: %lu\n",header.e_shoff);
+	printf("Machine: %s\t\n", get_machine_name(header.e_machine));
+	printf("Entry point address: 0x%lx\t\n", header.e_entry);
+	printf("Start of program headers: %lu\t\n",header.e_phoff);
+	printf("Start of section headers: %lu\t\n",header.e_shoff);
 }
+
+
+void check_NX(Elf64_Ehdr* header,char* mmap_base){
+	Elf64_Phdr *phdr_table = (Elf64_Phdr *)(mmap_base + header->e_phoff);
+
+	for(int i = 0; i < header->e_phnum; i++){
+
+		if(phdr_table[i].p_type == PT_GNU_STACK){
+
+			if(phdr_table[i].p_flags & PF_X){
+				printf("NX: \t\tDISABLED\n");
+				return;
+			} else{
+				printf("NX: \t\tENABLED\n");
+				return;
+			}
+		}
+	}
+	printf("NX: \t\tDISABLED\n");
+}
+
 
 
 void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
@@ -75,8 +97,8 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
     Elf64_Shdr *shdr_table = (Elf64_Shdr *)(mmap_base + header->e_shoff);
     
    
-    for (int s = 0; s < header->e_shnum; s++) {
-        Elf64_Shdr *sec_header = &shdr_table[s];
+    for (int i = 0; i < header->e_shnum; i++) {
+        Elf64_Shdr *sec_header = &shdr_table[i];
         
         
         if (sec_header->sh_type == SHT_DYNSYM) {
@@ -86,11 +108,11 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
             
             int num_symbols = sec_header->sh_size / sec_header->sh_entsize;
 
-            for (int i = 0; i < num_symbols; i++) {
-                char* symbol_name = strtab_ptr + sym[i].st_name;
+            for (int j = 0; j < num_symbols; j++) {
+                char* symbol_name = strtab_ptr + sym[j].st_name;
 
                 if (strcmp(symbol_name, "__stack_chk_fail") == 0) {
-                    printf("Stack Canary: FOUND\n");
+                    printf("Stack Canary: \tFOUND\n");
                     return; 
                 }
             }
@@ -98,7 +120,7 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
     }
     
     
-    printf("Stack Canary: NOT FOUND\n");
+    printf("Stack Canary: \tNOT FOUND\n");
 }
 
 Elf64_Ehdr elf_header_parser(FILE* fp) {
@@ -130,8 +152,9 @@ void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header
 	printf("\x1b[0m");
 	const char* PIE;
 	PIE = check_pie(&header);
-	printf("PIE:	%s\n",PIE);
+	printf("PIE:	\t%s\n",PIE);
 	check_stack_canary(&header,mmap_base);
+	check_NX(&header,mmap_base);
 }
 
 void program_header(FILE* fp,Elf64_Ehdr header){

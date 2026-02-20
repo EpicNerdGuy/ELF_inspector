@@ -11,5 +11,6 @@ void display_elf_header(FILE* fp,Elf64_Ehdr header);
 void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header,char* mmap_base);
 const char* check_pie(Elf64_Ehdr *header);
 void check_stack_canary(Elf64_Ehdr* my_header,char* mmap_base);
+void check_NX(Elf64_Ehdr* header,char* mmap_base);
 
 #endif 

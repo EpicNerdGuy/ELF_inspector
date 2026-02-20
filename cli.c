@@ -64,9 +64,6 @@ int main(int argc,char* argv[]){
 	FILE* fp;
 	int fd;
 	fd = open(argv[2],O_RDONLY);
-	if(fd < 0){
-		perror("ERROR: opening file\n");
-	}
 	int option_index = 0;
 
 	if (fstat(fd, &st) < 0) {
@@ -99,6 +96,10 @@ int main(int argc,char* argv[]){
 	if (show_help || filename == NULL){
 		print_usage(argv[0]);
 		return (filename == NULL && !show_help) ? EXIT_FAILURE : EXIT_SUCCESS;
+	}
+
+	if(fd < 0){
+		perror("ERROR: opening file\n");
 	}
 
 	fp = fopen(filename,"rb");
