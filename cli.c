@@ -131,8 +131,9 @@ int main(int argc,char* argv[]){
 		program_header(fp,my_header);
 	}
 
-	munmap(mmap_base, st.st_size);
 	display_security_overview(fp,my_header,sec_header,mmap_base);
+	munmap(mmap_base, st.st_size);
+	
 	fclose(fp);
 	return 0;
 }
