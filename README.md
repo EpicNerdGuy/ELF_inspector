@@ -129,7 +129,16 @@ GNU_RELRO       0x0000000000024fb0 0x0000000000025fb0 0x00001050 R--
 [+] Security Overview:
 ----------------
 
-PIE:	ENABLED
-
+PIE:            ENABLED
+STACK CANARY:   FOUND
+NX:             ENABLED
+[+] Found fortified function: __snprintf_chk
+[+] Found fortified function: __vfprintf_chk
+[+] Found fortified function: __stack_chk_fail
+[+] Found fortified function: __memcpy_chk
+[+] Found fortified function: __printf_chk
+[+] Found fortified function: __fprintf_chk
+[+] Found fortified function: __sprintf_chk
+FORTIFY:        ENABLED
 
 ```
