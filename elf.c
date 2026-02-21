@@ -123,6 +123,37 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
     printf("Stack Canary: \tNOT FOUND\n");
 }
 
+void check_fortify(Elf64_Ehdr *header, char *mmap_base){
+	
+	Elf64_Shdr *shdr_table = (Elf64_Shdr *)(mmap_base + header->e_shoff);
+	int fortified = 0;
+
+	for(int i = 0; i < header->e_shnum; i++){
+		
+		if(shdr_table[i].sh_type == SHT_DYNSYM){
+
+			Elf64_Sym *sym_table = (Elf64_Sym *)(mmap_base + shdr_table[i].sh_offset);
+			char *str_table = (char *)(mmap_base + shdr_table[shdr_table[i].sh_link].sh_offset);
+			int num_symbols = shdr_table[i].sh_size / sizeof(Elf64_Sym);
+
+			for(int j = 0; j < num_symbols; j++){
+				char *sym_name = str_table + sym_table[j].st_name;
+				if (strstr(sym_name, "_chk") != NULL) {
+                    printf("[+] Found fortified function: %s\n", sym_name);
+                    fortified = 1;
+                }
+
+			}
+		}
+	}
+	if(fortified){
+		printf("FORTIFY:	ENABLED\n");
+	}
+	else{
+		printf("FORTIFY:	DISABLED\n");
+	}
+}
+
 Elf64_Ehdr elf_header_parser(FILE* fp) {
     Elf64_Ehdr header;
     rewind(fp);
@@ -155,6 +186,7 @@ void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header
 	printf("PIE:	\t%s\n",PIE);
 	check_stack_canary(&header,mmap_base);
 	check_NX(&header,mmap_base);
+	check_fortify(&header, mmap_base);
 }
 
 void program_header(FILE* fp,Elf64_Ehdr header){
