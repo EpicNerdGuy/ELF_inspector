@@ -7,6 +7,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#define COLOR_RED     "\x1b[31m"
+#define COLOR_GREEN   "\x1b[32m"
+#define COLOR_RESET   "\x1b[0m"
+#define COLOR_BOLD    "\x1b[1m"
 
 
 const char* get_machine_name(uint16_t e_machine){
@@ -79,15 +83,15 @@ void check_NX(Elf64_Ehdr* header,char* mmap_base){
 		if(phdr_table[i].p_type == PT_GNU_STACK){
 
 			if(phdr_table[i].p_flags & PF_X){
-				printf("NX: \t\tDISABLED\n");
+				printf("NX: "COLOR_RED "\t\tDISABLED" COLOR_RESET"\n");
 				return;
 			} else{
-				printf("NX: \t\tENABLED\n");
+				printf("NX: "COLOR_GREEN "\t\tENABLED" COLOR_RESET"\n");
 				return;
 			}
 		}
 	}
-	printf("NX: \t\tDISABLED\n");
+	printf("NX: "COLOR_RED "\t\tDISABLED" COLOR_RESET"\n");
 }
 
 
@@ -112,7 +116,7 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
                 char* symbol_name = strtab_ptr + sym[j].st_name;
 
                 if (strcmp(symbol_name, "__stack_chk_fail") == 0) {
-                    printf("Stack Canary: \tFOUND\n");
+                    printf("STACK CANARY: "COLOR_GREEN "\tFOUND" COLOR_RESET"\n");
                     return; 
                 }
             }
@@ -120,7 +124,7 @@ void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
     }
     
     
-    printf("Stack Canary: \tNOT FOUND\n");
+    printf("STACK CANARY: "COLOR_RED "\tNOT FOUND" COLOR_RESET"\n");
 }
 
 void check_fortify(Elf64_Ehdr *header, char *mmap_base){
@@ -147,10 +151,10 @@ void check_fortify(Elf64_Ehdr *header, char *mmap_base){
 		}
 	}
 	if(fortified){
-		printf("FORTIFY:	ENABLED\n");
+		printf("FORTIFY: "COLOR_GREEN "\tENABLED" COLOR_RESET"\n");
 	}
 	else{
-		printf("FORTIFY:	DISABLED\n");
+		printf("FORTIFY: "COLOR_RED "\tDISABLED" COLOR_RESET"\n");
 	}
 }
 
@@ -171,7 +175,7 @@ Elf64_Ehdr elf_header_parser(FILE* fp) {
 }
 
 const char* check_pie(Elf64_Ehdr *header){
-	return (header -> e_type == ET_DYN) ? "ENABLED" : "DISABLED";
+	return (header -> e_type == ET_DYN) ? COLOR_GREEN "ENABLED" COLOR_RESET : COLOR_RED "DISABLED" COLOR_RESET;
 }
 
 void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header,char* mmap_base){
