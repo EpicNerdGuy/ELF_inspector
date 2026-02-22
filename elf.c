@@ -143,17 +143,17 @@ void check_fortify(Elf64_Ehdr *header, char *mmap_base){
 			for(int j = 0; j < num_symbols; j++){
 				char *sym_name = str_table + sym_table[j].st_name;
 				if (strstr(sym_name, "_chk") != NULL) {
-                    printf("[+] Found fortified function: %s\n", sym_name);
-                    fortified = 1;
+                    if(!fortified){
+						printf("FORTIFY: "COLOR_GREEN "\tENABLED" COLOR_RESET"\n");
+						fortified = 1;
+					}
+					printf("[+] Found fortified function: %s\n", sym_name);                    
                 }
 
 			}
 		}
 	}
-	if(fortified){
-		printf("FORTIFY: "COLOR_GREEN "\tENABLED" COLOR_RESET"\n");
-	}
-	else{
+	if(!fortified){
 		printf("FORTIFY: "COLOR_RED "\tDISABLED" COLOR_RESET"\n");
 	}
 }

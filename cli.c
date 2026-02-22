@@ -33,6 +33,7 @@ void print_usage(char* exec_name){
     printf("  -a, --all            Display ALL headers (ELF + Program)\n");
     printf("  -e, --eh             Parse and display the ELF Header\n");
     printf("  -p, --ph             Parse and display the Program Header Table\n");
+	printf("  -s, --sec             Parse and display the Security Overview\n");
     printf("  -h, --help           Display this help menu\n\n");
     printf("\033[1;34mExample:\033[0m\n");
     printf("  %s -f /bin/ls -eh\n\n", exec_name);
@@ -46,6 +47,7 @@ int main(int argc,char* argv[]){
 	char* filename = NULL;
 	int do_elf_header = 0;
 	int do_prog_header = 0;
+	int do_security_overview = 0;
 	int show_help = 0;
 	struct stat st;
 
@@ -58,21 +60,16 @@ int main(int argc,char* argv[]){
         {"ph",      no_argument,       0, 'p'},
         {"help",    no_argument,       0, '?'},
         {"all",		no_argument,	   0,  'a'},
+		{"sec", no_argument, 0, 's'},
         {0, 0, 0, 0}
     };
 
 	FILE* fp;
 	int fd;
-	fd = open(argv[2],O_RDONLY);
 	int option_index = 0;
 
-	if (fstat(fd, &st) < 0) {
-        perror("Error getting file size");
-        close(fd);
-        return 1;
-    }
 
-	while((opt = getopt_long(argc, argv, "f:epah", long_options, &option_index)) != -1){
+	while((opt = getopt_long(argc, argv, "f:epsah", long_options, &option_index)) != -1){
 		switch(opt){
 			case 'f':
 				filename = optarg;
@@ -80,6 +77,7 @@ int main(int argc,char* argv[]){
 			case 'a':
 				do_elf_header = 1;
 				do_prog_header =1;
+				do_security_overview = 1;
 				break;
 			case 'e':
 				do_elf_header = 1;
@@ -87,12 +85,16 @@ int main(int argc,char* argv[]){
 			case 'p':
 				do_prog_header = 1;
 				break;
+			case 's':
+				do_security_overview = 1;
+				break;
 			default:
 				show_help = 1;
 				break;
 		}
 	}
 
+	fd = open(filename,O_RDONLY);
 	if (show_help || filename == NULL){
 		print_usage(argv[0]);
 		return (filename == NULL && !show_help) ? EXIT_FAILURE : EXIT_SUCCESS;
@@ -101,6 +103,12 @@ int main(int argc,char* argv[]){
 	if(fd < 0){
 		perror("ERROR: opening file\n");
 	}
+
+	if (fstat(fd, &st) < 0) {
+        perror("Error getting file size");
+        close(fd);
+        return 1;
+    }
 
 	fp = fopen(filename,"rb");
 	if(!fp){
@@ -132,8 +140,10 @@ int main(int argc,char* argv[]){
 		program_header(fp,my_header);
 	}
 
-	display_security_overview(fp,my_header,sec_header,mmap_base);
-	munmap(mmap_base, st.st_size);
+	if(do_security_overview){
+		display_security_overview(fp,my_header,sec_header,mmap_base);
+		munmap(mmap_base, st.st_size);
+	}
 	
 	fclose(fp);
 	return 0;
