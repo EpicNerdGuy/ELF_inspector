@@ -94,6 +94,49 @@ void check_NX(Elf64_Ehdr* header,char* mmap_base){
 	printf("NX: "COLOR_RED "\t\tDISABLED" COLOR_RESET"\n");
 }
 
+void check_RELRO(Elf64_Ehdr *header, char* mmap_base){
+	int has_relro = 0;
+	int is_full_relro = 0;
+	Elf64_Phdr *phdr_table = (Elf64_Phdr *)(mmap_base + header->e_phoff);
+	Elf64_Shdr *shdr_table = (Elf64_Shdr *)(mmap_base + header->e_shoff);
+
+	for(int i = 0; i < header->e_phnum; i++){
+
+		if(phdr_table[i].p_type == PT_GNU_RELRO){
+			has_relro = 1;
+		}
+	}
+
+	for(int i = 0; i < header->e_shnum; i++){
+		Elf64_Shdr *sec_header = &shdr_table[i];
+
+		if(sec_header->sh_type == SHT_DYNAMIC){
+			Elf64_Dyn *dyn = (Elf64_Dyn *)(mmap_base + sec_header->sh_offset);
+			int entries = sec_header->sh_size/sizeof(Elf64_Dyn);
+
+			for(int j = 0; j < entries; j++){
+				if (dyn[j].d_tag == DT_FLAGS && (dyn[j].d_un.d_val & DF_BIND_NOW)) {
+					is_full_relro = 1;
+				}
+				if (dyn[j].d_tag == DT_FLAGS_1 && (dyn[j].d_un.d_val & DF_1_NOW)) {
+					is_full_relro = 1;
+				}
+			}
+		}
+	}
+
+	if(!has_relro){
+		printf("RELRO:		DISASBLED\n");
+	}
+	else if(is_full_relro){
+		printf("RELRO:		FULL RELRO\n");
+	}
+	else{
+		printf("RELRO:		PARTIAL RELRO");
+	}
+
+}
+
 
 
 void check_stack_canary(Elf64_Ehdr *header, char* mmap_base) {
@@ -188,6 +231,7 @@ void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header
 	const char* PIE;
 	PIE = check_pie(&header);
 	printf("PIE:	\t%s\n",PIE);
+	check_RELRO(&header, mmap_base);
 	check_stack_canary(&header,mmap_base);
 	check_NX(&header,mmap_base);
 	check_fortify(&header, mmap_base);
