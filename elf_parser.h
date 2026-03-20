@@ -3,6 +3,7 @@
 
 #include <elf.h>
 #include <stdio.h>
+#include <math.h>
 
 Elf64_Ehdr elf_header_parser(FILE* fp);
 const char* get_machine_name(uint16_t e_machine);
@@ -14,5 +15,7 @@ void check_stack_canary(Elf64_Ehdr* my_header,char* mmap_base);
 void check_NX(Elf64_Ehdr* header,char* mmap_base);
 void check_RELRO(Elf64_Ehdr* header,char* mmap_base);
 void check_fortify(Elf64_Ehdr* header,char* mmap_base);
+double shanon_entropy(uint8_t *buffer,size_t len);
+void calculate_shanon_entropy(FILE* fp,Elf64_Ehdr header,Elf64_Shdr sec_header,char* mmap_base);
 
 #endif 

@@ -1,4 +1,5 @@
 #include "elf_parser.h"
+#include <math.h>
 #include <elf.h>
 #include <sys/types.h>
 #include <string.h>
@@ -12,6 +13,20 @@
 #define COLOR_RESET   "\x1b[0m"
 #define COLOR_BOLD    "\x1b[1m"
 
+double shanon_entropy(uint8_t *buffer,size_t len){
+	size_t freq[256] = {0};
+	for(size_t i = 0; i < len; i++){
+		freq[buffer[i]]++;
+	}
+	double H = 0.0;
+	for(int i = 0; i < 256; i++){
+		if(freq[i] == 0)
+			continue;
+		double p = (double)freq[i]/len;
+		H -= p * log2(p);
+	}
+	return H;
+}
 
 const char* get_machine_name(uint16_t e_machine){
 
@@ -221,22 +236,6 @@ const char* check_pie(Elf64_Ehdr *header){
 	return (header -> e_type == ET_DYN) ? COLOR_GREEN "ENABLED" COLOR_RESET : COLOR_RED "DISABLED" COLOR_RESET;
 }
 
-void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header,char* mmap_base){
-	printf("\x1b[1;32m");
-	printf("\n[+] Security Overview:\n");
-	printf("----------------\n");
-	printf("\x1b[0m\n");
-	printf("\x1b[1;32m");
-	printf("\x1b[0m");
-	const char* PIE;
-	PIE = check_pie(&header);
-	printf("PIE:	\t%s\n",PIE);
-	check_RELRO(&header, mmap_base);
-	check_stack_canary(&header,mmap_base);
-	check_NX(&header,mmap_base);
-	check_fortify(&header, mmap_base);
-}
-
 void program_header(FILE* fp,Elf64_Ehdr header){
 	Elf64_Phdr phdr;
 	if(header.e_phnum == 0){
@@ -281,10 +280,54 @@ void program_header(FILE* fp,Elf64_Ehdr header){
         printf("%-15s 0x%016lx 0x%016lx 0x%08lx %-5s\n",type_str, phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, flags);
 	}
 
-
 }
 
+void calculate_shanon_entropy(FILE* fp,Elf64_Ehdr header,Elf64_Shdr sec_header,char* mmap_base){
 
+	Elf64_Shdr *shdr_table = (Elf64_Shdr *)(mmap_base + header.e_shoff);
+	fseek(fp, header.e_shoff + (header.e_shstrndx * sizeof(Elf64_Shdr)), SEEK_SET);
+	fread(&shdr_table, sizeof(Elf64_Shdr), 1, fp);
+
+	char *shstrtab = malloc(shdr_table->sh_size);
+	fseek(fp, shdr_table->sh_offset, SEEK_SET);
+	fread(shstrtab, 1, shdr_table->sh_size, fp);
+	for(int i = 0; i < header.e_shnum; i++){
+		fseek(fp,header.e_shoff+(i * sizeof(Elf64_Shdr)), SEEK_SET);
+		fread(&sec_header,sizeof(Elf64_Shdr),1,fp);
+
+		if(sec_header.sh_type == SHT_NOBITS || sec_header.sh_size == 0){
+			continue;
+		}
+
+		uint8_t *buffer = malloc(sec_header.sh_size);
+		fseek(fp,sec_header.sh_offset,SEEK_SET);
+		fread(buffer,1 ,sec_header.sh_size,fp);
+
+		double H = shanon_entropy(buffer,sec_header.sh_size);
+
+		char* name = shstrtab + sec_header.sh_name;
+
+		printf("%-20s entropy: %.4f %s\n", name, H,
+			H > 7.0 ? "[!] SUSPICIOUS -- packed/encrypted/obfuscated" :
+			H > 6.0 ? "[~] elevated" : "");
+
+
+	}
+}
  
-
-
+void display_security_overview(FILE* fp,Elf64_Ehdr header,Elf64_Shdr *sec_header,char* mmap_base){
+	printf("\x1b[1;32m");
+	printf("\n[+] Security Overview:\n");
+	printf("----------------\n");
+	printf("\x1b[0m\n");
+	printf("\x1b[1;32m");
+	printf("\x1b[0m");
+	const char* PIE;
+	PIE = check_pie(&header);
+	printf("PIE:	\t%s\n",PIE);
+	check_RELRO(&header, mmap_base);
+	check_stack_canary(&header,mmap_base);
+	check_NX(&header,mmap_base);
+	check_fortify(&header, mmap_base);
+	calculate_shanon_entropy(fp, header, *sec_header, mmap_base);
+}
